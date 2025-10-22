@@ -1,0 +1,33 @@
+case 'url': {
+  try {
+    if (!m.quoted) return reply("📎 Please reply to an image, video, or document to upload.");
+
+    // ✅ Download the quoted media
+    const mediaPath = await EliteProTech.downloadAndSaveMediaMessage(m.quoted);
+
+    if (!mediaPath) return reply("⚠️ Failed to download the media file.");
+
+    // ✅ Prepare and send upload
+    const formData = new FormData();
+    formData.append("file", fs.createReadStream(mediaPath));
+
+    const response = await fetch("https://eliteprotech-url.zone.id/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      reply(`✅ *File uploaded successfully!*\n📎 *URL:* ${data.public_url}`);
+    } else {
+      reply(`❌ Upload failed: ${data.error || "Unknown error"}`);
+    }
+
+    // Clean up local file
+    fs.unlinkSync(mediaPath);
+  } catch (error) {
+    console.error("Upload error:", error);
+    reply(`❌ An error occurred while uploading the file.`);
+  }
+  break;
